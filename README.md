@@ -2,8 +2,6 @@
 
 PTQ-Bench-DS는 DS 프로젝트용으로 정리한 PTQ-Bench 기반 저장소입니다.
 
-이 레포에는 다음 구성만 남겨 두었습니다.
-
 - GPTQ
 - C-GPTQ
 - AWQ
