@@ -20,7 +20,7 @@ def run(config):
     # Step 1: run AWQ search (optional)
     if run_awq:
         search_cmd = [
-            "python3", "awq/awq/entry.py",
+            "python", "awq/awq/entry.py",
             "--model_path", model_path,
             "--w_bit", str(w_bit),
             "--q_group_size", str(q_group_size),
@@ -35,7 +35,7 @@ def run(config):
 
     # Step 2: evaluate quantized model
     eval_cmd = [
-        "python3", "awq/awq/entry.py",
+        "python", "awq/awq/entry.py",
         "--model_path", model_path,
         "--tasks", tasks,
         "--w_bit", str(w_bit),

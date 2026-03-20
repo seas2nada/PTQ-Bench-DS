@@ -11,7 +11,7 @@ def run(config):
     device = config.get("CUDA_VISIBLE_DEVICES", None)
     act_order = config.get("act_order", False)
     cmd = [
-        "python3", "c-gptq/run.py",
+        "python", "c-gptq/run.py",
         model_path, dataset,
         "--wbits", wbits,
         "--save", save_path,

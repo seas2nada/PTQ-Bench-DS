@@ -4,7 +4,7 @@ import subprocess
 @register_method("quip")
 def run(config):
     cmd = [
-        "python3", "QuIP/run.py",  # 或其他主脚本
+        "python", "QuIP/run.py",  # 或其他主脚本
         config["model_path"],
         config["dataset"],
         "--wbits", str(config["wbits"]),

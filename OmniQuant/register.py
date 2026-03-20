@@ -5,7 +5,7 @@ import subprocess
 @register_method("omniquant")
 def run(config):
     cmd = [
-        "python3", "OmniQuant/main.py",  # 改为你主脚本相对路径
+        "python", "OmniQuant/main.py",  # 改为你主脚本相对路径
         "--model", config["model"],
         "--epochs", str(config["epochs"]),
         "--output_dir", config["output_dir"],

@@ -1,31 +1,32 @@
 # PTQ-Bench-DS
 
-PTQ-Bench-DS is a distilled subset of PTQ-Bench that keeps only the following method implementations and evaluation utilities:
+PTQ-Bench-DS는 DS 프로젝트용으로 정리한 PTQ-Bench 기반 저장소입니다.
+
+이 레포에는 다음 구성만 남겨 두었습니다.
 
 - GPTQ
 - C-GPTQ
 - AWQ
 - OmniQuant
 - QuIP
-- Perplexity evaluation (`eval_ppl.py`)
-- Zero-shot evaluation via `lm-evaluation-harness`
+- perplexity 평가 코드 (`eval_ppl.py`)
+- zero-shot 평가 코드 (`lm-evaluation-harness`, `lm_eval.sh`)
 
-This directory is intended to be a smaller, easier-to-share codebase focused on PTQ method runs and evaluation.
+## 현재 지원 상태
 
-## Current support status
+- `gptq`: 일반 GPTQ 양자화
+- `c-gptq`: Hessian 누적 기반 continual GPTQ
+- `awq`: 일반 AWQ
+- `omniquant`: 일반 OmniQuant
+- `quip`: 일반 QuIP
 
-- `gptq`: standard GPTQ quantization
-- `c-gptq`: GPTQ-based continual quantization with Hessian carry-over (`h_in`, `h_out`, `h_pi`, optional SPD controls)
-- `awq`: standard AWQ flow
-- `omniquant`: standard OmniQuant flow
-- `quip`: standard QuIP flow
+중요한 제한사항:
 
-Important limitation:
+- 현재 continual PTQ는 GPTQ 계열의 `c-gptq` 경로에만 구현되어 있습니다.
+- `awq`, `omniquant`, `quip` 에는 continual 확장이 아직 들어가 있지 않습니다.
+- 즉, 이 세 방법은 현재 단일 태스크 기준 baseline 용도로만 포함되어 있습니다.
 
-- Continual PTQ is currently implemented only for the GPTQ-based continual path (`c-gptq`).
-- AWQ, OmniQuant, and QuIP are included as single-task baselines and do not currently have continual extensions in this repository.
-
-## Repository layout
+## 디렉토리 구성
 
 ```text
 PTQ-Bench-DS/
@@ -35,17 +36,21 @@ PTQ-Bench-DS/
 ├── gptq/
 ├── c-gptq/
 ├── configs/
-├── scripts/
 ├── lm-evaluation-harness/
 ├── run_quant.py
+├── run_gptq.sh
+├── run_awq.sh
+├── run_cgpt.sh
+├── run_cgptq2.sh
+├── run_cgptq_spd.sh
 ├── eval_ppl.py
 ├── test_ppl.bash
 └── lm_eval.sh
 ```
 
-## Method configs
+## 설정 파일
 
-The launcher uses the YAML files in `configs/`:
+공통 launcher는 `configs/` 아래 YAML을 사용합니다.
 
 - `configs/gptq.yaml`
 - `configs/c-gptq.yaml`
@@ -53,145 +58,82 @@ The launcher uses the YAML files in `configs/`:
 - `configs/omniquant.yaml`
 - `configs/quip.yaml`
 
-List the registered methods:
+등록된 메서드 확인:
 
 ```bash
-python3 run_quant.py --method gptq --config configs/gptq.yaml --list
+python run_quant.py --method gptq --config configs/gptq.yaml --list
 ```
 
-## Running quantization
+## 실행 방식
 
-Use the common launcher directly:
+### 1. 공통 launcher 사용
 
 ```bash
-python3 run_quant.py --method gptq --config configs/gptq.yaml
-python3 run_quant.py --method c-gptq --config configs/c-gptq.yaml
-python3 run_quant.py --method awq --config configs/awq.yaml
-python3 run_quant.py --method omniquant --config configs/omniquant.yaml
-python3 run_quant.py --method quip --config configs/quip.yaml
+python run_quant.py --method gptq --config configs/gptq.yaml
+python run_quant.py --method c-gptq --config configs/c-gptq.yaml
+python run_quant.py --method awq --config configs/awq.yaml
+python run_quant.py --method omniquant --config configs/omniquant.yaml
+python run_quant.py --method quip --config configs/quip.yaml
 ```
 
-## Bash wrappers
+### 2. 원본 PTQ-Bench의 bash 스크립트 그대로 사용
 
-Convenience wrappers are provided in `scripts/`.
+아래 스크립트들은 `/home/ptq_docker/Workspace/PTQ-Bench` 에 있던 root bash script를 그대로 복사한 것입니다.
 
-### GPTQ
+- `run_gptq.sh`
+- `run_awq.sh`
+- `run_cgpt.sh`
+- `run_cgptq2.sh`
+- `run_cgptq_spd.sh`
+- `test_ppl.bash`
+- `lm_eval.sh`
+
+예시:
 
 ```bash
-bash scripts/run_gptq.sh 0 configs/gptq.yaml wikitext2 3 128 128
+bash run_gptq.sh 0 configs/gptq.yaml wikitext2 3 128 128
+bash run_awq.sh 0 configs/awq.yaml wikitext2 4 128 128
+bash run_cgpt.sh 0 configs/c-gptq.yaml wikitext2 3 128 128
+bash test_ppl.bash 0 /path/to/model
+bash lm_eval.sh 0 /path/to/model
 ```
 
-Arguments:
+주의:
 
-```text
-run_gptq.sh GPU CONFIG DATASET BITS GROUP_SIZE NSAMPLES [SAVE_PATH]
-```
+- 위 bash 스크립트는 원본과 동일하게 `python` 을 호출합니다.
+- 따라서 실행 환경에도 원본 PTQ-Bench 와 동일한 Python/패키지 구성이 필요합니다.
+- `OmniQuant` 와 `QuIP` 는 원본 root 기준 별도 bash wrapper가 없어서 `run_quant.py` 로 실행하면 됩니다.
 
-### AWQ
+## 평가
+
+### Perplexity 평가
 
 ```bash
-bash scripts/run_awq.sh 0 configs/awq.yaml wikitext2 4 128 128
+python eval_ppl.py --model /path/to/model
 ```
 
-Arguments:
-
-```text
-run_awq.sh GPU CONFIG DATASET BITS GROUP_SIZE NSAMPLES [SAVE_PATH]
-```
-
-### QuIP
-
-```bash
-bash scripts/run_quip.sh 0 configs/quip.yaml
-```
-
-Arguments:
-
-```text
-run_quip.sh GPU CONFIG [DATASET] [BITS] [NSAMPLES] [SAVE_PATH]
-```
-
-### OmniQuant
-
-```bash
-bash scripts/run_omniquant.sh 0 configs/omniquant.yaml
-```
-
-Arguments:
-
-```text
-run_omniquant.sh GPU CONFIG
-```
-
-### Continual GPTQ
-
-Single step:
-
-```bash
-bash scripts/run_cgpt.sh 0 configs/c-gptq.yaml wikitext2 3 128 128
-```
-
-Arguments:
-
-```text
-run_cgpt.sh GPU CONFIG DATASET BITS GROUP_SIZE NSAMPLES [H_IN] [SAVE_PATH]
-```
-
-Multi-step examples:
-
-```bash
-bash scripts/run_cgptq2.sh 0 configs/c-gptq.yaml 3 128 128
-bash scripts/run_cgptq_spd.sh 0 configs/c-gptq.yaml 3 128 128 logeuc
-```
-
-## Evaluation
-
-### Perplexity
-
-```bash
-bash scripts/eval_ppl.sh 0 /path/to/model
-```
-
-Root-level compatibility wrapper:
+또는
 
 ```bash
 bash test_ppl.bash 0 /path/to/model
 ```
 
-### Zero-shot tasks
+### Zero-shot 평가
 
 ```bash
-bash scripts/lm_eval.sh 0 /path/to/model
+bash lm_eval.sh 0 /path/to/model
 ```
 
-Optional arguments:
+기본 task set은 다음과 같습니다.
 
-```text
-lm_eval.sh GPU MODEL [TASKS] [BATCH_SIZE] [OUTPUT_DIR]
-```
+- `boolq`
+- `piqa`
+- `winogrande`
+- `hellaswag`
+- `arc_easy`
+- `arc_challenge`
 
-Example:
+## 메모
 
-```bash
-bash scripts/lm_eval.sh 0 /path/to/model boolq,piqa,winogrande 1 ./results/demo
-```
-
-The wrapper sets `PYTHONPATH` to the bundled `lm-evaluation-harness` directory before calling `python3 -m lm_eval`.
-
-## Environment notes
-
-- The wrappers in this distilled repo use `python3`.
-- Some method subdirectories keep the dependency assumptions of their original upstream implementations.
-- AWQ usually requires its package install and kernel build steps.
-- OmniQuant and QuIP may also require their original dependency stacks depending on the target model.
-
-## Origin
-
-This repository was extracted from a larger PTQ-Bench working tree to keep only the PTQ methods and evaluation components relevant to:
-
-- OmniQuant
-- QuIP
-- AWQ
-- GPTQ
-- C-GPTQ
-- evaluation
+- 이 레포는 DS 프로젝트에서 바로 참고할 수 있도록 필요한 메서드와 평가 코드만 남긴 버전입니다.
+- 원본 PTQ-Bench의 전체 실험 코드나 다른 방법들은 의도적으로 제외했습니다.
