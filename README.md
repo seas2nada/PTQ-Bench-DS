@@ -1,6 +1,10 @@
 # PTQ-Bench-DS
 
-PTQ-Bench-DS는 DS 프로젝트용으로 정리한 PTQ-Bench 기반 저장소입니다.
+PTQ-Bench-DS는 DS 프로젝트에서 사용하기 위해 정리한 PTQ-Bench 기반 저장소입니다.
+
+이 저장소는 [zjq0455/PTQ-Bench](https://github.com/zjq0455/PTQ-Bench)를 기반으로 필요한 메서드와 평가 코드 중심으로 구성했습니다.
+
+포함된 주요 구성은 다음과 같습니다.
 
 - GPTQ
 - C-GPTQ
@@ -45,6 +49,55 @@ PTQ-Bench-DS/
 ├── test_ppl.bash
 └── lm_eval.sh
 ```
+
+## Docker 기반 설치 가이드
+
+실험은 Docker Hub의 [`seas2nada/ptq_docker`](https://hub.docker.com/repository/docker/seas2nada/ptq_docker/general) 이미지를 기반으로 진행했습니다.
+
+2026년 3월 20일 기준 Docker Hub 공개 태그는 `26.02.02` 입니다.
+
+### 1. Docker 이미지 pull
+
+```bash
+docker pull seas2nada/ptq_docker:26.02.02
+```
+
+### 2. 컨테이너 실행
+
+아래 예시는 현재 실험 환경과 동일하게 `/home` 과 `/DB` 를 bind mount 하는 방식입니다.
+
+```bash
+docker run --gpus all -it \
+  --name ptq_docker \
+  --shm-size 64g \
+  -v /home:/home \
+  -v /DB:/DB \
+  -w /home/ptq_docker/Workspace \
+  seas2nada/ptq_docker:26.02.02 \
+  bash
+```
+
+### 3. 레포 준비
+
+컨테이너 내부에서 작업합니다.
+
+```bash
+cd /home/ptq_docker/Workspace
+git clone https://github.com/seas2nada/PTQ-Bench-DS.git
+cd PTQ-Bench-DS
+```
+
+### 4. 설치 확인
+
+```bash
+python run_quant.py --method gptq --config configs/gptq.yaml --list
+```
+
+참고:
+
+- root bash script는 `python` 명령을 사용합니다.
+- 따라서 README의 실행 예시는 컨테이너 내부 환경을 기준으로 작성했습니다.
+- 호스트에서 직접 실행할 경우에는 Python alias 및 의존성 구성을 별도로 맞춰야 합니다.
 
 ## 설정 파일
 
