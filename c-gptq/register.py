@@ -1,0 +1,43 @@
+from utils.register import register_method
+import os
+import subprocess
+@register_method("c-gptq")
+def run(config):
+    model_path = config["model_path"]
+    dataset = config["dataset"]
+    wbits = str(config["wbits"])
+    save_path = config["save_path"]
+    group_size = config["group_size"]
+    device = config.get("CUDA_VISIBLE_DEVICES", None)
+    act_order = config.get("act_order", False)
+    cmd = [
+        "python3", "c-gptq/run.py",
+        model_path, dataset,
+        "--wbits", wbits,
+        "--save", save_path,
+        "--groupsize", str(group_size),
+        "--h-out", save_path + "/h_out.pt",
+        "--h-pi", str(config["h_pi"]),
+    ]
+    if act_order:
+        cmd.append("--act-order")
+    if config.get("h_in"):
+        cmd.append("--h-in")
+        cmd.append(config["h_in"])
+    if config.get("use_spd"):
+        cmd.append("--use_spd")
+    if config.get("spdmode"):
+        cmd.append("--spdmode")
+        cmd.append(config["spdmode"])
+    if config.get("h_beta"):
+        cmd.append("--h-beta")
+        cmd.append(str(config["h_beta"]))
+    if config.get("spd_block"):
+        cmd.append("--spd-block")
+        cmd.append(str(config["spd_block"]))
+    # if device:
+    #     env = {"CUDA_VISIBLE_DEVICES": device, **os.environ}
+    # else:
+    #     env = os.environ
+    print("Running command:", " ".join(cmd))
+    subprocess.run(cmd, check=True)

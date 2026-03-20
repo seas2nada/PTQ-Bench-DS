@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.so
+build/
+dist/
+*.egg-info/
+awq_cache/
+output/
+outputs/
+results/
+.DS_Store
